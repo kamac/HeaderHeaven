@@ -1,7 +1,40 @@
 Header Heaven
 ==============
 
-A tool for generating C++ methods given C++ headers. Header Heaven uses it's own **simple** C++ header parser, so expect it to break every now and then. (If you mess around with stuff like volatile, mutable etc. it probably won't handle it too well)
+A tool for generating C++ source files from C++ headers (for now methods only). HeaderHeaven uses it's own **simple** C++ header parser, so expect it to break every now and then. (If you mess around with stuff like volatile, mutable etc. it probably won't handle it too well)
+
+So, when HeaderHeaven parses such C++ header:
+```c++
+#ifndef HEADER_GUARD_H
+#define HEADER_GUARD_H
+
+#include "Common.h"
+
+class TestClass
+{
+public:
+	TestClass();
+	~TestClass();
+
+	void Method();
+}
+```
+It would produce following source file:
+```c++
+TestClass::TestClass()
+{
+}
+
+TestClass::~TestClass()
+{
+}
+
+void TestClass::Method()
+{
+}
+```
+
+HeaderHeaven tries it's best to be smart and not generate functions that are supposed to be an interface, or functions whose body is already defined in the header.
 
 How to build
 --------------
