@@ -16,7 +16,7 @@ public:
 	TestClass();
 	~TestClass();
 
-	void Method();
+	void Method(const std::string& aArgument) const;
 }
 ```
 It would produce following source file:
@@ -29,7 +29,7 @@ TestClass::~TestClass()
 {
 }
 
-void TestClass::Method()
+void TestClass::Method(const std::string& aArgument) const
 {
 }
 ```
