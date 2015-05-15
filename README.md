@@ -24,3 +24,13 @@ The paths are relative, so for example:
 	MyProject/include/ MyProject/src/
 
 Would be a correct configuration, as long as MyProject folder is right next to HeaderHeaven executable.
+
+License
+--------------
+
+HeaderHeaven uses the GNU General Public License v2, which describes the rights
+to distribute or change the code. 
+
+Please read LICENSE.md file for the full license.
+
+2015, Maciej Kozik
