@@ -16,10 +16,6 @@ solution "HeaderHeaven"
     includedirs 
     { 
         "../code/",
-        "../code/libjpeg/include/",
-        "../code/freetype/include/",
-        "../code/glew/include/",
-        "../code/SFML/include/",
         "../code/HeaderHeaven/include/"
 	}
 	
@@ -60,7 +56,6 @@ solution "HeaderHeaven"
         optimize "On"
 
 
-    dofile "sfml.lua"
     ------------------------------------------------------------------
     -- sdk projects
     ------------------------------------------------------------------
@@ -70,5 +65,4 @@ solution "HeaderHeaven"
 			language "C++"
 			targetdir "bin"
 			files { "../code/HeaderHeaven/src/**.cpp", "../code/HeaderHeaven/include/**.h" }
-            defines { "SFML_STATIC" }
-            links { "sfml-graphics", "sfml-window", "sfml-system", "opengl32", "glew", "freetype", "libjpeg", "winmm" }
+            links { }
