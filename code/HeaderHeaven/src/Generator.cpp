@@ -99,6 +99,7 @@ bool Generator::TryParseClass(Class &aOutClass)
 
 	// this may be a class/struct declaration
 	// process all rubbish up to either ; or {. Take the last identifier as the name of the class.
+	aOutClass.name = "";
 	while (m_lexer.NextToken().id != Lexer::TOK_EOF) {
 		if (m_lexer.currTok.id == ';') {
 			// false alarm. Just a forward class/struct declaration. Disregard.
@@ -109,7 +110,9 @@ bool Generator::TryParseClass(Class &aOutClass)
 			break;
 		}
 		else {
-			aOutClass.name = m_lexer.currTok.strId;
+			Lexer::Token peekToken = m_lexer.PeekToken();
+			if ((peekToken.id == ':' || peekToken.id == '{') && aOutClass.name.empty())
+				aOutClass.name = m_lexer.currTok.strId;
 		}
 	}
 	// process class' body
