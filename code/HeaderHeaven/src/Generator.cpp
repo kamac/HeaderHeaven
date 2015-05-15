@@ -41,10 +41,10 @@ void Generator::Generate(const std::string& aInPath, const std::string& aOutPath
 std::string Generator::GenerateCPP(const std::string& aHeaderSource)
 {
 	m_lexer.SetCode(aHeaderSource);
-	m_lexer.NextToken();
 	std::vector<Class> classes;
 
 	do {
+		TryParseNamespace(classes);
 		Class cClass;
 		if (TryParseClass(cClass)) {
 			classes.push_back(cClass);
@@ -61,7 +61,11 @@ std::string Generator::GenerateCPP(const std::string& aHeaderSource)
 
 std::string Generator::GenerateClass(const Class& aClass, const std::string& aNameSpace) const
 {
-	std::string ns = aNameSpace + aClass.name + "::";
+	std::string ns("");
+	if (aClass.nameSpace.empty())
+		ns = aNameSpace + aClass.name + "::";
+	else
+		ns = aNameSpace + aClass.nameSpace + "::" + aClass.name + "::";
 	std::string out("");
 	for (uint16_t i = 0; i < aClass.methods.size(); i++) {
 		if (!aClass.methods[i].hasBody)
@@ -92,10 +96,47 @@ std::string Generator::GenerateMethod(const Function& aMethod, const std::string
 	return out;
 }
 
+bool Generator::TryParseNamespace(std::vector<Class> &aOutClasses)
+{
+	Lexer::Token peekToken = m_lexer.PeekToken();
+	if (!(peekToken.id == Lexer::TOK_IDENTIFIER && peekToken.strId == "namespace"))
+		return false;
+	m_lexer.NextToken();
+
+	if (m_lexer.NextToken().id != Lexer::TOK_IDENTIFIER)
+		return false; // syntax error
+
+	std::string nameSpace = m_lexer.currTok.strId;
+	if (m_lexer.NextToken().id != '{')
+		return false; // syntax error
+
+	do {
+		std::vector<Class> newClasses;
+		if (TryParseNamespace(newClasses)) {
+			for (uint16_t i = 0; i < newClasses.size(); i++) {
+				if (newClasses[i].nameSpace.empty())
+					newClasses[i].nameSpace = nameSpace;
+				else
+					newClasses[i].nameSpace = nameSpace + "::" + newClasses[i].nameSpace;
+				aOutClasses.push_back(newClasses[i]);
+			}
+		}
+		
+		Class cClass;
+		if (TryParseClass(cClass)) {
+			cClass.nameSpace = nameSpace;
+			aOutClasses.push_back(cClass);
+		}
+	} while (m_lexer.PeekToken().id != '}');
+	m_lexer.NextToken();
+}
+
 bool Generator::TryParseClass(Class &aOutClass)
 {
-	if (!(m_lexer.currTok.id == Lexer::TOK_IDENTIFIER && (m_lexer.currTok.strId == "class" || m_lexer.currTok.strId == "struct")))
+	Lexer::Token peekToken = m_lexer.PeekToken();
+	if (!(peekToken.id == Lexer::TOK_IDENTIFIER && (peekToken.strId == "class" || peekToken.strId == "struct")))
 		return false;
+	m_lexer.NextToken();
 
 	// this may be a class/struct declaration
 	// process all rubbish up to either ; or {. Take the last identifier as the name of the class.
@@ -106,7 +147,6 @@ bool Generator::TryParseClass(Class &aOutClass)
 			return false;
 		}
 		else if (m_lexer.currTok.id == '{') {
-			m_lexer.NextToken();
 			break;
 		}
 		else {
@@ -119,17 +159,19 @@ bool Generator::TryParseClass(Class &aOutClass)
 	bool parsedFunctionBody = false;
 	while (m_lexer.currTok.id != Lexer::TOK_EOF) {
 		parsedFunctionBody = false;
-		if (m_lexer.currTok.id == Lexer::TOK_IDENTIFIER)
+		Lexer::Token peekToken = m_lexer.PeekToken();
+		if (peekToken.id == Lexer::TOK_IDENTIFIER)
 		{
-			if (m_lexer.currTok.strId == "class" || m_lexer.currTok.strId == "struct") {
+			if (peekToken.strId == "class" || peekToken.strId == "struct") {
 				Class subClass;
 				if (TryParseClass(subClass))
 				{
 					aOutClass.classes.push_back(subClass);
 				}
 			}
-			else if (m_lexer.currTok.strId == "public" || m_lexer.currTok.strId == "protected" || m_lexer.currTok.strId == "private")
+			else if (peekToken.strId == "public" || peekToken.strId == "protected" || peekToken.strId == "private")
 			{
+				m_lexer.NextToken();
 				if (m_lexer.NextToken().id != ':')
 					return false; // syntax error
 			}

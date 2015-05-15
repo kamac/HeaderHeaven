@@ -33,6 +33,7 @@ private:
 	std::string GenerateCPP(const std::string& aHeaderSource);
 	std::string GenerateClass(const Class& aClass, const std::string& aNameSpace) const;
 	std::string GenerateMethod(const Function& aMethod, const std::string& aNameSpace) const;
+	bool TryParseNamespace(std::vector<Class> &aOutClasses);
 	bool TryParseClass(Class &aOutClass);
 	bool TryParseType(std::string& aOutType);
 	bool TryParseFunction(Function &aOutFunc, const std::string &aClassName);

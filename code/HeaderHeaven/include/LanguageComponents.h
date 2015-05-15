@@ -31,6 +31,7 @@ struct Class {
 	std::string name;
 	std::vector<Function> methods;
 	std::vector<Class> classes;
+	std::string nameSpace = "";
 };
 
 #endif
