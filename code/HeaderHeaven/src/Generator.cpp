@@ -213,6 +213,16 @@ bool Generator::TryParseFunction(Function &aOutFunc, const std::string &aClassNa
 			aOutFunc.isConst = true;
 			m_lexer.NextToken();
 		}
+		bool isInterfaceMethod = false;
+		if (m_lexer.currTok.id == '=') {
+			// interface method, skip the = 0
+			m_lexer.NextToken();
+			if (m_lexer.currTok.id != Lexer::TOK_INTEGER)
+				return false;
+			m_lexer.NextToken();
+			isInterfaceMethod = true;
+			aOutFunc.hasBody = true;
+		}
 		if (m_lexer.currTok.id == '{') {
 			aOutFunc.hasBody = true;
 			// skip the body
@@ -228,7 +238,8 @@ bool Generator::TryParseFunction(Function &aOutFunc, const std::string &aClassNa
 			} while (m_lexer.currTok.id != '}' && nested == 0);
 		}
 		else if (m_lexer.currTok.id == ';') {
-			aOutFunc.hasBody = false;
+			if (!isInterfaceMethod)
+				aOutFunc.hasBody = false;
 		}
 		return true;
 	}
