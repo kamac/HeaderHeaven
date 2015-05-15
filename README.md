@@ -3,7 +3,7 @@ Header Heaven
 
 A tool for generating C++ source files from C++ headers (for now methods only). HeaderHeaven uses it's own **simple** C++ header parser, so expect it to break every now and then. (If you mess around with stuff like volatile, mutable etc. it probably won't handle it too well)
 
-So, when HeaderHeaven parses such C++ header:
+So, when HeaderHeaven parses such C++ header in MyProject/include/TestClass.h:
 ```c++
 #ifndef HEADER_GUARD_H
 #define HEADER_GUARD_H
@@ -19,7 +19,7 @@ public:
 	void Method(const std::string& aArgument) const;
 }
 ```
-It would produce following source file:
+It would produce following source file in MyProject/src/TestClass.cpp:
 ```c++
 TestClass::TestClass()
 {
