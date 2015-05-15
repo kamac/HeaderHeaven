@@ -246,7 +246,7 @@ bool Generator::TryParseType(std::string& aOutType)
 		std::string properType = "";
 		if (!TryParseType(properType))
 			return false;
-		aOutType += properType;
+		aOutType += " " + properType;
 		return true;
 	}
 	if (m_lexer.PeekToken().id == '<')
@@ -284,15 +284,14 @@ bool Generator::TryParseType(std::string& aOutType)
 				return false; // syntax error
 			}
 		}
-		while (m_lexer.currTok.id == '&' || m_lexer.currTok.id == '*') {
-			aOutType += m_lexer.currTok.id;
-			m_lexer.NextToken();
-		}
-		return true;
 	}
-	else {
-		return true;
+	Lexer::Token peekToken = m_lexer.PeekToken();
+	while (peekToken.id == '&' || peekToken.id == '*') {
+		m_lexer.NextToken();
+		aOutType += m_lexer.currTok.id;
+		peekToken = m_lexer.PeekToken();
 	}
+	return true;
 }
 
 bool Generator::TryParseVarDeclaration(Variable& aOutVar)

@@ -68,14 +68,17 @@ Lexer::Token Lexer::_NextToken() {
 		}
 		else if (m_lastChar == '/' && PeekChar() == '*') {
 			// multiline comment.
-			m_lastChar = GetChar(1);
-			while ((m_lastChar = GetChar(1)) != '*' && m_lastChar != -1) {
-				if (PeekChar() == '/') {
-					m_lastChar = GetChar(1);
+			m_lastChar = GetChar(2);
+			while (m_lastChar != -1) {
+				if (m_lastChar == '*' && PeekChar() == '/')
+				{
+					m_lastChar = GetChar(2);
 					break;
 				}
+				else {
+					m_lastChar = GetChar(1);
+				}
 			}
-			m_lastChar = GetChar(1);
 		}
 		else if (m_lastChar == '\n') {
 			m_lastChar = GetChar(1);
