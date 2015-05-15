@@ -33,4 +33,4 @@ to distribute or change the code.
 
 Please read LICENSE.md file for the full license.
 
-2015, Maciej Kozik
+© 2015, Maciej Kozik
