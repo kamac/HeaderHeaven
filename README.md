@@ -52,7 +52,7 @@ Once you build HeaderHeaven, create a config.txt file next to the executable. Th
 	headersPath sourcesPath
 	...
 
-The paths are relative, so for example:
+The paths are relative to the executable, so for example:
 
 	MyProject/include/ MyProject/src/
 
