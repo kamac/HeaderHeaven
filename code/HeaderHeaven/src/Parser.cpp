@@ -22,9 +22,27 @@ void Parser::ParseHeader(std::vector<Class>& aOutClasses)
 	} while (m_lexer.PeekToken().id != Lexer::TOK_EOF);
 }
 
-void Parser::ParseSource(std::vector<Function>& aOutFunctions)
+void Parser::ParseSource(std::vector<Function>& aOutFunctions, std::vector<std::string>& aUsedNamespaces)
 {
 	do {
+		Lexer::Token peekToken = m_lexer.PeekToken();
+		if (peekToken.id = Lexer::TOK_IDENTIFIER && peekToken.strId == "using") {
+			m_lexer.NextToken();
+			peekToken = m_lexer.PeekToken();
+			if (peekToken.id == Lexer::TOK_IDENTIFIER && peekToken.strId == "namespace") {
+				m_lexer.NextToken();
+				m_lexer.NextToken();
+				if (m_lexer.currTok.id == Lexer::TOK_IDENTIFIER) {
+					aUsedNamespaces.push_back(m_lexer.currTok.strId);
+					if (m_lexer.NextToken().id != ';') {
+						return; // syntax error
+					}
+				}
+				else {
+					return; // syntax error
+				}
+			}
+		}
 		Function func;
 		if (TryParseFunction(func, ""))
 			aOutFunctions.push_back(func);

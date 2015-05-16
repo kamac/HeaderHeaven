@@ -31,8 +31,12 @@ public:
 
 private:
 	void GenerateCPP(const std::string& aHeaderSource, std::string& aSource);
-	void GenerateClass(const Class& aClass, const std::string& aNameSpace, std::string& aCPPsrc, std::vector<Function>& aDeclaredFuncs) const;
+	void GenerateClass(const Class& aClass, const std::string& aNameSpace, std::string& aCPPsrc);
 	std::string GenerateMethod(const Function& aMethod, const std::string& aNameSpace) const;
+	bool DoesDeclarationMatch(const Function& aCPP, const Function& aHeader, const std::string& aNameSpace) const;
+
+	std::vector<Function> m_declaredFunctions;
+	std::vector<std::string> m_usedNamespaces;
 };
 
 #endif

@@ -28,7 +28,7 @@ public:
 	~Parser();
 
 	void ParseHeader(std::vector<Class>& aOutClasses);
-	void ParseSource(std::vector<Function>& aOutFunctions);
+	void ParseSource(std::vector<Function>& aOutFunctions, std::vector<std::string>& aUsedNamespaces);
 	bool TryParseNamespace(std::vector<Class> &aOutClasses);
 	bool TryParseClass(Class &aOutClass);
 	bool TryParseType(std::string& aOutType);
