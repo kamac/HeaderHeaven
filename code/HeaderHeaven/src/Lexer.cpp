@@ -60,8 +60,8 @@ Lexer::Token Lexer::PeekToken(uint32_t aOffset) {
 }
 
 Lexer::Token Lexer::_NextToken() {
+	m_lastChar = GetChar(1);
 	if (m_codeIt + 1 > m_pCode->length()) return Token(TOK_EOF);
-	while (isspace(m_lastChar = GetChar(1))) {}
 
 	// eat comments & new lines
 	do {
@@ -85,7 +85,7 @@ Lexer::Token Lexer::_NextToken() {
 				}
 			}
 		}
-		else if (m_lastChar == '\n') {
+		else if (isspace(m_lastChar)) {
 			m_lastChar = GetChar(1);
 		}
 		else {
