@@ -35,20 +35,20 @@ void Generator::Generate(const std::string& aInPath, const std::string& aOutPath
 	std::ifstream cppfile(aOutPath, std::ios::binary);
 	if (cppfile.is_open() && cppfile.good()) {
 		cppfile.seekg(0, std::ios::end);
-		cppContent.resize(cppfile.tellg());
+		cppContent.reserve(cppfile.tellg());
 		cppfile.seekg(0, std::ios::beg);
 		cppfile.read(&cppContent[0], cppContent.size());
 	}
 	cppfile.close();
 
 	// for now just copy the content.
-	GenerateCPP(content, cppContent);
 	std::ofstream outfile(aOutPath, std::ios::binary);
-	outfile.write((const char*)&cppContent[0], cppContent.size());
+	std::string cpp = GenerateCPP(content, cppContent);
+	outfile.write((const char*)&cpp[0], cpp.size());
 	outfile.close();
 }
 
-void Generator::GenerateCPP(const std::string& aHeaderSource, std::string& aSource)
+std::string Generator::GenerateCPP(const std::string& aHeaderSource, std::string& aSource)
 {
 	m_lexer.SetCode(aHeaderSource);
 	std::vector<Class> classes;
@@ -61,67 +61,36 @@ void Generator::GenerateCPP(const std::string& aHeaderSource, std::string& aSour
 		}
 	} while (m_lexer.PeekToken().id != Lexer::TOK_EOF);
 
-	m_lexer.SetCode(aSource);
 	std::vector<Function> declaredFunctions;
 	do {
 		Function func;
-		if (TryParseFunction(func, ""))
-			declaredFunctions.push_back(func);
-	} while (m_lexer.PeekToken().id != Lexer::TOK_EOF);
-
-	for (uint16_t i = 0; i < classes.size(); i++) {
-		GenerateClass(classes[i], "", aSource, declaredFunctions);
+		TryParseFunction(func, "");
 	}
+
+	std::string out("");
+	for (uint16_t i = 0; i < classes.size(); i++) {
+		out += GenerateClass(classes[i], "");
+	}
+
+	return out;
 }
 
-void Generator::GenerateClass(const Class& aClass, const std::string& aNameSpace, std::string& aCPPsrc, std::vector<Function>& aDeclaredFuncs) const
+std::string Generator::GenerateClass(const Class& aClass, const std::string& aNameSpace) const
 {
 	std::string ns("");
-	auto DoesDeclarationMatch = [&](const Function& aLHS, const Function& aRHS) {
-		return (aLHS.nameSpace + "::" + aLHS.declaration.name) == ns + aRHS.declaration.name
-			&& aLHS.declaration.returnType == aRHS.declaration.returnType;
-	};
 	if (aClass.nameSpace.empty())
 		ns = aNameSpace + aClass.name + "::";
 	else
 		ns = aNameSpace + aClass.nameSpace + "::" + aClass.name + "::";
+	std::string out("");
 	for (uint16_t i = 0; i < aClass.methods.size(); i++) {
-		const Function& generatedMethod = aClass.methods[i];
-		if (!generatedMethod.hasBody) {
-			// check if this method already exists in source file
-			bool functionExists = false;
-			for (uint16_t i = 0; i < aDeclaredFuncs.size(); i++) {
-				const Function& cppMethod = aDeclaredFuncs[i];
-				if (DoesDeclarationMatch(cppMethod, generatedMethod)) {
-					functionExists = true;
-					break;
-				}
-			}
-			if (!functionExists) {
-				uint32_t insertIndex = 0, declaredMethodIndex = 0;
-				std::string methodSrc = "\n\n" + GenerateMethod(generatedMethod, ns);
-				if (i > 0) {
-					const Function& previousMethod = aClass.methods[i - 1];
-					for (uint16_t j = 0; j < aDeclaredFuncs.size(); j++) {
-						const Function& cppMethod = aDeclaredFuncs[j];
-						if (DoesDeclarationMatch(cppMethod, previousMethod)) {
-							insertIndex = cppMethod.endIndex;
-							declaredMethodIndex = j;
-							break;
-						}
-					}
-					// update endIndexes
-					for (uint16_t j = declaredMethodIndex+1; j < aDeclaredFuncs.size(); j++) {
-						aDeclaredFuncs[j].endIndex += methodSrc.size();
-					}
-				}
-				aCPPsrc.insert(insertIndex, methodSrc);
-			}
-		}
+		if (!aClass.methods[i].hasBody)
+			out += GenerateMethod(aClass.methods[i], ns);
 	}
 	for (uint16_t i = 0; i < aClass.classes.size(); i++) {
-		GenerateClass(aClass.classes[i], ns, aCPPsrc, aDeclaredFuncs);
+		out += GenerateClass(aClass.classes[i], ns);
 	}
+	return out;
 }
 
 std::string Generator::GenerateMethod(const Function& aMethod, const std::string& aNameSpace) const
@@ -139,7 +108,7 @@ std::string Generator::GenerateMethod(const Function& aMethod, const std::string
 	out += ")";
 	if (aMethod.isConst)
 		out += " const";
-	out += "\n{\n}";
+	out += "\n{\n}\n\n";
 	return out;
 }
 
@@ -253,26 +222,27 @@ bool Generator::TryParseFunction(Function &aOutFunc, const std::string &aClassNa
 	};
 	bool isFunctionDeclaration = false;
 	Lexer::Token peekToken = m_lexer.PeekToken();
-	auto funcName = SplitFuncName(peekToken.strId);
-	// constructor
 	if (peekToken.id == Lexer::TOK_IDENTIFIER) {
-		if ((funcName.second == aClassName || funcName.second == SplitFuncName(funcName.first).second) && m_lexer.PeekToken(2).id == '(') {
+		auto funcName = SplitFuncName(peekToken.strId);
+		if (funcName.second == aClassName && m_lexer.PeekToken(2).id == '(') {
 			m_lexer.NextToken(); m_lexer.NextToken(); // skip to '('
 			isFunctionDeclaration = true;
-			aOutFunc.declaration.name = funcName.second;
+			aOutFunc.declaration.name = aClassName;
 			aOutFunc.declaration.returnType = "";
 			aOutFunc.nameSpace = funcName.first;
 		}
 	}
-	// destructor
-	if (funcName.second.size() > 0 && funcName.second[0] == '~') {
-		m_lexer.NextToken();
-		if ((funcName.second == ('~' + SplitFuncName(funcName.first).second) || funcName.second == '~' + aClassName) && m_lexer.PeekToken().id == '(') {
-			m_lexer.NextToken(); // skip to '('
-			isFunctionDeclaration = true;
-			aOutFunc.declaration.name = funcName.second;
-			aOutFunc.declaration.returnType = "";
-			aOutFunc.nameSpace = funcName.first;
+	else if (peekToken.id == '~') {
+		m_lexer.NextToken(); m_lexer.NextToken(); // skip ~
+		if (m_lexer.currTok.id == Lexer::TOK_IDENTIFIER) {
+			auto funcName = SplitFuncName(m_lexer.currTok.strId);
+			if (funcName.second == aClassName && m_lexer.PeekToken().id == '(') {
+				m_lexer.NextToken(); // skip to '('
+				isFunctionDeclaration = true;
+				aOutFunc.declaration.name = '~' + aClassName;
+				aOutFunc.declaration.returnType = "";
+				aOutFunc.nameSpace = funcName.first;
+			}
 		}
 	}
 	std::string type = "";
@@ -349,7 +319,6 @@ bool Generator::TryParseFunction(Function &aOutFunc, const std::string &aClassNa
 						nested--;
 				}
 			} while (m_lexer.currTok.id != '}' && nested == 0);
-			aOutFunc.endIndex = m_lexer.GetCursor();
 		}
 		else if (m_lexer.currTok.id == ';') {
 			if (!isInterfaceMethod)

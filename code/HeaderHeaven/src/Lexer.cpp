@@ -24,6 +24,11 @@ void Lexer::SetCode(const std::string& code) {
 	// TODO. Change all \r\n to \n
 }
 
+uint32_t Lexer::GetCursor() const
+{
+	return m_codeIt;
+}
+
 int Lexer::GetChar(int add) {
 	if (add < 0 && m_codeIt == 0) return -1; // this'd be a big mistake if this happened
 	if (m_codeIt < m_pCode->length()) {
@@ -89,7 +94,7 @@ Lexer::Token Lexer::_NextToken() {
 	} while (true);
 	if (m_lastChar == -1) return TOK_EOF;
 
-	if (isalpha(m_lastChar) || m_lastChar == '_') {
+	if (isalpha(m_lastChar) || m_lastChar == '_' || m_lastChar == '~') {
 		// tokenize an identifier
 		std::string tokIdentifier = "";
 		do {

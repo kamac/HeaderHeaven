@@ -38,6 +38,7 @@ public:
 	void SetCode(const std::string& apCode);
 	Token NextToken();
 	Token PeekToken(uint32_t aOffset = 1);
+	uint32_t GetCursor() const;
 
 	Token currTok;
 
@@ -50,7 +51,7 @@ private:
 	const std::string *m_pCode;
 	int m_lastChar;
 	bool m_reversed;
-	unsigned int m_codeIt;
+	uint32_t m_codeIt;
 };
 
 #endif

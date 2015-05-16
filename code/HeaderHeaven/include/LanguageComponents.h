@@ -25,7 +25,9 @@ struct Variable {
 struct Function {
 	Variable declaration;
 	std::vector<Variable> arguments;
+	std::string nameSpace = "";
 	bool hasBody, isConst = false;
+	uint32_t endIndex;
 };
 struct Class {
 	std::string name;

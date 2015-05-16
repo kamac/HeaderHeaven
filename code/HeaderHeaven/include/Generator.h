@@ -30,8 +30,8 @@ public:
 	void Generate(const std::string& aInPath, const std::string& aOutPath);
 
 private:
-	std::string GenerateCPP(const std::string& aHeaderSource);
-	std::string GenerateClass(const Class& aClass, const std::string& aNameSpace) const;
+	void GenerateCPP(const std::string& aHeaderSource, std::string& aSource);
+	void GenerateClass(const Class& aClass, const std::string& aNameSpace, std::string& aCPPsrc, std::vector<Function>& aDeclaredFuncs) const;
 	std::string GenerateMethod(const Function& aMethod, const std::string& aNameSpace) const;
 	bool TryParseNamespace(std::vector<Class> &aOutClasses);
 	bool TryParseClass(Class &aOutClass);
