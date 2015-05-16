@@ -248,25 +248,30 @@ bool Parser::TryParseFunction(Function &aOutFunc, const std::string &aClassName)
 			isInterfaceMethod = true;
 			aOutFunc.hasBody = true;
 		}
-		if (m_lexer.currTok.id == '{') {
-			aOutFunc.hasBody = true;
-			// skip the body
-			uint16_t nested = 0;
-			do {
-				m_lexer.NextToken();
-				if (m_lexer.currTok.id == '{')
-					nested++;
-				else if (m_lexer.currTok.id == '}') {
-					if (nested > 0)
-						nested--;
-				}
-			} while (m_lexer.currTok.id != '}' && nested == 0);
-			aOutFunc.endIndex = m_lexer.GetCursor();
-		}
-		else if (m_lexer.currTok.id == ';') {
-			if (!isInterfaceMethod)
-				aOutFunc.hasBody = false;
-		}
+		do {
+			if (m_lexer.currTok.id == '{') {
+				aOutFunc.hasBody = true;
+				// skip the body
+				uint16_t nested = 0;
+				do {
+					m_lexer.NextToken();
+					if (m_lexer.currTok.id == '{')
+						nested++;
+					else if (m_lexer.currTok.id == '}') {
+						if (nested > 0)
+							nested--;
+					}
+				} while (m_lexer.currTok.id != '}' && nested == 0);
+				aOutFunc.endIndex = m_lexer.GetCursor();
+				break;
+			}
+			else if (m_lexer.currTok.id == ';') {
+				if (!isInterfaceMethod)
+					aOutFunc.hasBody = false;
+				break;
+			}
+			m_lexer.NextToken();
+		} while (m_lexer.currTok.id != Lexer::TOK_EOF);
 		return true;
 	}
 	return false;
