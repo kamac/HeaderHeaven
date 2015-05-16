@@ -86,27 +86,14 @@ void Generator::GenerateClass(const Class& aClass, const std::string& aNameSpace
 			}
 			if (!functionExists) {
 				uint32_t insertIndex = aCPPsrc.length(), declaredMethodIndex = 0;
-				std::string methodSrc("");
+				std::string methodSrc = GenerateMethod(generatedMethod, ns);
 				// check if .cpp file uses our namespace. If it does, don't use namespace's prefix in the
 				// generated function
 				for (uint16_t i = 0; i < m_usedNamespaces.size(); i++) {
-					std::string tempNamespace = aNameSpace + aClass.nameSpace;
-					if (!m_usedNamespaces[i].empty() && tempNamespace.find(m_usedNamespaces[i]) == 0) {
-						std::string newNS = aClass.nameSpace;
-						newNS.erase(0, m_usedNamespaces[i].length());
-						if (newNS.find("::") == 0)
-							newNS.erase(0, 2);
-						if (!newNS.empty() && newNS.rfind("::") != newNS.length() - 2)
-							newNS += "::";
-						methodSrc = "\n\n" + GenerateMethod(generatedMethod, newNS + aClass.name + "::");
-						break;
-					}
-					else if (m_usedNamespaces[i] == aClass.nameSpace) {
-						methodSrc = "\n\n" + GenerateMethod(generatedMethod, aClass.name + "::");
-					}
+					if (methodSrc.find(m_usedNamespaces[i] + "::") == 0)
+						methodSrc.erase(0, m_usedNamespaces[i].length() + 2);
 				}
-				if (methodSrc.empty())
-					methodSrc = "\n\n" + GenerateMethod(generatedMethod, ns);
+				methodSrc = "\n\n" + methodSrc;
 				if (i > 0) {
 					// find the string index at which previous method ends in source file
 					const Function& previousMethod = aClass.methods[i - 1];

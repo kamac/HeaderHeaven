@@ -112,23 +112,29 @@ bool Parser::TryParseClass(Class &aOutClass)
 	bool parsedFunctionBody = false;
 	while (m_lexer.currTok.id != Lexer::TOK_EOF) {
 		parsedFunctionBody = false;
-		Lexer::Token peekToken = m_lexer.PeekToken();
-		if (peekToken.id == Lexer::TOK_IDENTIFIER)
-		{
-			if (peekToken.strId == "class" || peekToken.strId == "struct") {
-				Class subClass;
-				if (TryParseClass(subClass))
+		bool foundAnything;
+		do {
+			foundAnything = false;
+			Lexer::Token peekToken = m_lexer.PeekToken();
+			if (peekToken.id == Lexer::TOK_IDENTIFIER)
+			{
+				if (peekToken.strId == "class" || peekToken.strId == "struct") {
+					foundAnything = true;
+					Class subClass;
+					if (TryParseClass(subClass))
+					{
+						aOutClass.classes.push_back(subClass);
+					}
+				}
+				else if (peekToken.strId == "public" || peekToken.strId == "protected" || peekToken.strId == "private")
 				{
-					aOutClass.classes.push_back(subClass);
+					foundAnything = true;
+					m_lexer.NextToken();
+					if (m_lexer.NextToken().id != ':')
+						return false; // syntax error
 				}
 			}
-			else if (peekToken.strId == "public" || peekToken.strId == "protected" || peekToken.strId == "private")
-			{
-				m_lexer.NextToken();
-				if (m_lexer.NextToken().id != ':')
-					return false; // syntax error
-			}
-		}
+		} while (foundAnything);
 		Function func;
 		if (TryParseFunction(func, aOutClass.name)) {
 			aOutClass.methods.push_back(func);
