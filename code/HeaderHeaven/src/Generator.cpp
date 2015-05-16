@@ -92,6 +92,12 @@ void Generator::GenerateClass(const Class& aClass, const std::string& aNameSpace
 				for (uint16_t i = 0; i < m_usedNamespaces.size(); i++) {
 					if (methodSrc.find(m_usedNamespaces[i] + "::") == 0)
 						methodSrc.erase(0, m_usedNamespaces[i].length() + 2);
+					size_t pos;
+					do {
+						pos = methodSrc.find(" " + m_usedNamespaces[i] + "::");
+						if (pos != std::string::npos)
+							methodSrc.erase(pos+1, m_usedNamespaces[i].length() + 2);
+					} while (pos != std::string::npos);
 				}
 				methodSrc = "\n\n" + methodSrc;
 				if (i > 0) {
